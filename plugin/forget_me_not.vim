@@ -24,4 +24,4 @@ augroup forget-me-not
   autocmd!
 augroup END
 
-call forget_me_not#instance#run_timer()
+call forget_me_not#instance#init()

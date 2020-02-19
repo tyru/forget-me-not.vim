@@ -79,32 +79,41 @@ COMMANDS					*forgetmenot-commands*
 	Show this command's help.
 
 						*:ForgetMeNot-recover*
-:ForgetMeNot recover [-stale] [-silent] [{name}]
+:ForgetMeNot recover [-stale] [-unstale] [-named] [-silent] [{name}]
 	Select and recover a previous session from vim instances, named
 	sessions.
-	If {name} was given, recover the named session if it exists.
-	TODO: -stale, -silent
+	If {name} was given, recover the named session and sets current
+	session to {name} (this lets Vim keep updating the session each
+	|g:forgetmenot_instance_session_interval|).
+
+	-stale lists only stale sessions.
+	-silent does not echo anything when there are no sessions to restore.
 
 						*:ForgetMeNot-save*
-:ForgetMeNot save[!] {name}
+:ForgetMeNot save[!] [{name}]
 	Save current session as {name}.
+	This works like |:save| for session file.
 	This sets current session to {name}, and keep writing to the session
 	every |g:forgetmenot_instance_session_interval| milliseconds.
 
 						*:ForgetMeNot-write*
-:ForgetMeNot write[!] {name}
+:ForgetMeNot write[!] [{name}]
 	Write current session as {name}.
+	This works like |:write| for session file.
 	This command is almost same as |:ForgetMeNot-save| but this doesn't
-	set current session to {name}.
+	set current session to {name} when {name} was given.
 	Thus changes after running this command won't save to the specified
 	named session.
 	If [!] was not given and {name} exists, it failed.
 	If [!] was given, overwrite the session.
 						*:ForgetMeNot-list*
-:ForgetMeNot list [-stale] [-named]
+:ForgetMeNot list [-stale] [-unstale] [-named]
 	List sessions specified by options.
 	If nothing was specified, list all sessions.
-	TODO: -stale, -named
+
+	-stale lists only stale sessions.
+	-unstale lists only non-stale sessions.
+	-named lists only named sessions.
 
 VARIABLES					*forgetmenot-variables*
 --------
