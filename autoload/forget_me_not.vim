@@ -213,8 +213,8 @@ function! s:cmd_delete(args) abort
     call s:U.echo_error('No name specified. see help :ForgetMeNot-delete')
     return
   elseif name ==# curname
-    call s:U.echo_error('Cannot delete current session.')
-    return
+    call forget_me_not#instance#set_session_name(v:null)
+    call forget_me_not#instance#update()
   endif
   " Acquire lock to write to the session file.
   " Because multiple writes may occur at same time.
