@@ -59,7 +59,7 @@ INTRODUCTION					*forgetmenot-introduction*
 	" Recover the named session
 	:ForgetMeNot recover my-big-project
 	" Or recover instance session (e.g. stale session)
-	:ForgetMeNot recover instance-12345
+	:ForgetMeNot read instance/12345
 >
 	" List all sessions
 	:ForgetMeNot list

@@ -28,6 +28,10 @@ function! s:cmd_recover(args) abort
   for i in range(1, len(a:args) - 1)
     let arg = a:args[i]
     if arg[0] !=# '-'
+      if arg =~# 'instance/'
+        call s:U.echo_error('Cannot specify instance session name')
+        return
+      endif
       let session_name = arg
       break
     endif
@@ -59,7 +63,8 @@ endfunction
 " TODO use popup instead of inputlist()
 function! s:do_read(session_name, stale, named, silent, is_recover) abort
   if !empty(a:session_name)
-    let session_file = s:U.named_dir() .. '/' .. a:session_name .. '/Session.vim'
+    let session = s:get_sessions()->filter({-> v:val.name ==# a:session_name })->get(0, {})
+    let session_file = session->get('session_file', '')
     if !filereadable(session_file)
       call s:U.echo_error('No such named session: ' .. a:session_name)
       return
@@ -146,6 +151,10 @@ function! s:cmd_write(args) abort
 endfunction
 
 function! s:do_write(name, dir, is_save) abort
+  if a:name =~# '^instance/'
+    call s:U.echo_error('Cannot specify instance session name')
+    return
+  endif
   call mkdir(a:dir, 'p')
   let file = a:dir .. '/Session.vim'
   " Acquire lock to write to the session file.
@@ -241,11 +250,11 @@ endfunction
 "                              non-stale (v:false) sessions. v:null or absent key
 "                              returns all sessions.
 " Returns:
-" * name (String): empty if named == v:false
+" * name (String): session name. 'instance/{pid}' if named == v:false
 " * pid (Number): -1 if named == v:true
 " * session_file (String)
 " * named (Boolean)
-function! s:get_sessions(options) abort
+function! s:get_sessions(options = {}) abort
   let named = a:options->get('named', v:null)
   let stale = a:options->get('stale', v:null)
   let sessions = []
@@ -261,7 +270,7 @@ function! s:get_sessions(options) abort
   if named is# v:false || named is# v:null
     let sessions += glob(s:U.running_dir() .. '/*', 1, 1)
     \->map({-> #{
-    \   name: '',
+    \   name: 'instance/' .. fnamemodify(v:val, ':t'),
     \   pid: str2nr(fnamemodify(v:val, ':t')),
     \   session_file: v:val .. '/Session.vim',
     \   named: v:false,
@@ -300,7 +309,7 @@ function! s:format_session(session) abort
   else
     let attrs += ['not saved yet']
   endif
-  let name = 'instance-' .. a:session.pid
+  let name = 'instance/' .. a:session.pid
   let attrs_str = (empty(attrs) ? '' : ' (' .. attrs->join(', ') .. ')')
   return current .. name .. attrs_str
 endfunction
