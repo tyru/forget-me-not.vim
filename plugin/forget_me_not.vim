@@ -1,14 +1,17 @@
 scriptencoding utf-8
 scriptversion 4
 
-if !exists('g:forgetmenot_session_dir')
-  let g:forgetmenot_session_dir = '~/.local/cache/vim-forget-me-not'
+if !exists('g:forgetmenot_base_dir')
+  let g:forgetmenot_base_dir = '~/.local/cache/vim-forget-me-not'
 endif
 if !exists('g:forgetmenot_instance_session_interval')
   let g:forgetmenot_instance_session_interval = 60 * 1000
 endif
 if !exists('g:forgetmenot_enable_tab_session')
   let g:forgetmenot_enable_tab_session = 0
+endif
+if !exists('g:forgetmenot_enable_window_session')
+  let g:forgetmenot_enable_window_session = 0
 endif
 if !exists('g:forgetmenot_named_session_options')
   let g:forgetmenot_named_session_options = 'blank,curdir,folds,help,localoptions,options,tabpages,terminal,winsize'
@@ -17,15 +20,12 @@ endif
 " TODO
 " * autoload
 " * delay s:init() if possible
-" * g:forgetmenot_enable_tab_session
-" * Save tab-local session (optional)
-" * Save window-local session (optional)
 
 
 " Dir paths
 
 function! s:required_dirs() abort
-  let dir = expand(g:forgetmenot_session_dir)
+  let dir = expand(g:forgetmenot_base_dir)
   return [
   \ dir,
   \ dir .. '/lock',
@@ -36,15 +36,15 @@ function! s:required_dirs() abort
 endfunction
 
 function! s:running_dir() abort
-  return expand(g:forgetmenot_session_dir .. '/running')
+  return expand(g:forgetmenot_base_dir .. '/running')
 endfunction
 
 function! s:current_running_dir() abort
-  return expand(g:forgetmenot_session_dir .. '/running/' .. getpid())
+  return expand(g:forgetmenot_base_dir .. '/running/' .. getpid())
 endfunction
 
 function! s:named_dir() abort
-  return expand(g:forgetmenot_session_dir .. '/named')
+  return expand(g:forgetmenot_base_dir .. '/named')
 endfunction
 
 
@@ -53,7 +53,7 @@ let s:created_lock_files = []
 " TODO: stricter escape for a:name
 function! s:acquire_lock(name, retry, interval) abort
   let name = substitute(a:name, '[/\\]', '-', 'g')
-  let dir = expand(g:forgetmenot_session_dir .. '/lock/' .. name)
+  let dir = expand(g:forgetmenot_base_dir .. '/lock/' .. name)
   for _ in range(a:retry)
     try
       call mkdir(dir)

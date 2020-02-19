@@ -101,13 +101,18 @@ g:forgetmenot_instance_session_interval
 			(default: `60 * 1000`)
 	(TODO)
 
-				*g:forgetmenot_session_dir*
-g:forgetmenot_session_dir
+				*g:forgetmenot_base_dir*
+g:forgetmenot_base_dir
 			(default: `'~/.local/cache/vim-forget-me-not'`)
-	(TODO)
+	
 
 				*g:forgetmenot_enable_tab_session*
 g:forgetmenot_enable_tab_session
+			(default: `0`)
+	(TODO)
+
+				*g:forgetmenot_enable_window_session*
+g:forgetmenot_enable_window_session
 			(default: `0`)
 	(TODO)
 
