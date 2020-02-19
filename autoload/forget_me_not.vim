@@ -24,6 +24,7 @@ function! s:cmd_switch(args) abort
   let stale = v:null
   let named = v:null
   let silent = v:false
+  let recover = v:false
   for i in range(1, len(a:args) - 1)
     let arg = a:args[i]
     if arg[0] !=# '-'
@@ -44,9 +45,17 @@ function! s:cmd_switch(args) abort
       let named = v:false
     elseif arg ==# '-silent'
       let silent = v:true
+    elseif arg ==# '-recover'
+      let recover = v:true
     endif
   endfor
-  call s:do_read(session_name, stale, named, silent, v:true)
+  if recover
+    let stale = v:true
+    let named = v:false
+    let silent = v:true
+    let session_name = ''
+  endif
+  call s:do_read(session_name, stale, named, silent, recover, v:true)
 endfunction
 
 function! s:cmd_read(args) abort
@@ -58,11 +67,13 @@ function! s:cmd_read(args) abort
   let stale = v:null
   let named = v:null
   let silent =  v:false
-  call s:do_read(session_name, stale, named, silent, v:false)
+  let recover = v:false
+  call s:do_read(session_name, stale, named, silent, recover, v:false)
 endfunction
 
-" TODO use popup instead of inputlist()
-function! s:do_read(session_name, stale, named, silent, is_switch) abort
+" TODO use popup instead of inputlist(), input()
+function! s:do_read(session_name, stale, named, silent, recover, is_switch) abort
+  let recovered_session = v:null
   if !empty(a:session_name)
     let session = s:get_sessions()->filter({-> v:val.name ==# a:session_name })->get(0, {})
     let session_file = session->get('session_file', '')
@@ -81,7 +92,8 @@ function! s:do_read(session_name, stale, named, silent, is_switch) abort
     let list = sessions->copy()->map({i,s -> (i + 1) .. '. ' .. s:format_session(s) })
     let nr = inputlist(['Select a session to restore.'] + list)
     if nr > 0
-      let session_file = sessions->get(nr - 1, {})->get('session_file', '')
+      let recovered_session = sessions->get(nr - 1, {})
+      let session_file = recovered_session->get('session_file', '')
     else
       let session_file = ''
     endif
@@ -96,6 +108,19 @@ function! s:do_read(session_name, stale, named, silent, is_switch) abort
   if a:is_switch && !empty(a:session_name)
     call forget_me_not#instance#set_session_name(a:session_name)
   endif
+  if a:recover
+    redraw
+    let ans = input("Delete the session '" .. recovered_session.name .. "' ? " ..
+    \ "(IT IS DANGEROUS IF THE VIM INSTANCE IS ALIVE!!) [y/N]: ")
+    if ans =~? '^y'
+      redraw
+      execute 'ForgetMeNot delete -force' recovered_session.name
+    else
+      call s:U.echo_info(
+      \ 'You can do it manually by running: ' ..
+      \ ':ForgetMeNot delete -force ' .. recovered_session.name)
+    endif
+  endif
 endfunction
 
 function! s:cmd_save(args) abort
@@ -103,7 +128,7 @@ function! s:cmd_save(args) abort
   let curname = forget_me_not#instance#get_session_name()
   if empty(name)
     if curname is# v:null
-      call s:U.echo_error('No name specified. see help :ForgetMeNot-save')
+      call forget_me_not#instance#update()
       return
     endif
     let name = curname
@@ -117,10 +142,6 @@ function! s:cmd_save(args) abort
     \ "Use ':ForgetMeNot save!' to overwrite the session.")
     return
   endif
-  if empty(name) && curname is# v:null
-    call forget_me_not#instance#update()
-    return
-  endif
   call s:do_write(name, dir, v:true)
 endfunction
 
@@ -129,7 +150,7 @@ function! s:cmd_write(args) abort
   let curname = forget_me_not#instance#get_session_name()
   if empty(name)
     if curname is# v:null
-      call s:U.echo_error('No name specified. see help :ForgetMeNot-write')
+      call forget_me_not#instance#update()
       return
     endif
     let name = curname
@@ -141,10 +162,6 @@ function! s:cmd_write(args) abort
   if isdirectory(dir) && a:args[0] !=# 'write!'
     call s:U.echo_error("Session '" .. name .. "' already exists. " ..
     \ "Use ':ForgetMeNot write!' to overwrite the session.")
-    return
-  endif
-  if empty(name) && curname is# v:null
-    call forget_me_not#instance#update()
     return
   endif
   call s:do_write(name, dir, v:false)
@@ -179,7 +196,18 @@ function! s:do_write(name, dir, is_save) abort
 endfunction
 
 function! s:cmd_delete(args) abort
-  let name = a:args->get(1, '')
+  let name = ''
+  let force = v:false
+  for i in range(1, len(a:args) - 1)
+    let arg = a:args[i]
+    if arg[0] !=# '-'
+      let name = arg
+      break
+    endif
+    if arg ==# '-force'
+      let force = v:true
+    endif
+  endfor
   let curname = forget_me_not#instance#get_session_name()
   if empty(name)
     call s:U.echo_error('No name specified. see help :ForgetMeNot-delete')
@@ -195,11 +223,16 @@ function! s:cmd_delete(args) abort
     call s:U.echo_error("Another Vim is accessing '" .. name .. "' session: " .. err)
     return
   endif
+  let session = s:get_sessions()->filter({-> v:val.name ==# name })->get(0, {})
+  if !session.named && !force
+    call s:U.echo_error('Add -force option to delete instance session.')
+    call s:U.echo_error('BECAUSE IT MAY BE DANGEROUS. THE VIM INSTANCE IS REALLY DEAD?')
+    return
+  endif
   try
-    let dir = s:U.named_dir() .. '/' .. name
-    call delete(dir, 'rf')
-    if isdirectory(dir)
-      call s:U.echo_error('Could not delete directory: ' .. dir)
+    call delete(session.session_dir, 'rf')
+    if isdirectory(session.session_dir)
+      call s:U.echo_error('Could not delete directory: ' .. session.session_dir)
       return
     endif
     echomsg "Deleted '" .. name .. "' session."
@@ -253,26 +286,31 @@ endfunction
 "                              returns all sessions.
 " Returns:
 " * name (String): session name. 'instance/{pid}' if named == v:false
+" * session_dir (String): session file's directory name
 " * pid (Number): -1 if named == v:true
-" * session_file (String)
-" * named (Boolean)
+" * session_file (String): session file full path
+" * named (Boolean): v:true if the session is named session
 function! s:get_sessions(options = {}) abort
   let named = a:options->get('named', v:null)
   let stale = a:options->get('stale', v:null)
   let sessions = []
   if named is# v:true || named is# v:null
-    let sessions += glob(s:U.named_dir() .. '/*', 1, 1)
+    let dir = s:U.named_dir()
+    let sessions += glob(dir .. '/*', 1, 1)
     \->map({-> #{
     \   name: fnamemodify(v:val, ':t'),
+    \   session_dir: v:val,
     \   pid: -1,
     \   session_file: v:val .. '/Session.vim',
     \   named: v:true,
     \}})
   endif
   if named is# v:false || named is# v:null
-    let sessions += glob(s:U.running_dir() .. '/*', 1, 1)
+    let dir = s:U.instance_dir()
+    let sessions += glob(dir .. '/*', 1, 1)
     \->map({-> #{
     \   name: 'instance/' .. fnamemodify(v:val, ':t'),
+    \   session_dir: v:val,
     \   pid: str2nr(fnamemodify(v:val, ':t')),
     \   session_file: v:val .. '/Session.vim',
     \   named: v:false,

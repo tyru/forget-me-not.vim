@@ -7,7 +7,7 @@ let s:U = forget_me_not#util#export()
 
 function! forget_me_not#instance#init() abort
   " Save a instance session every 'g:forgetmenot_instance_session_interval'
-  call mkdir(s:U.current_running_dir(), 'p')
+  call mkdir(s:U.current_instance_dir(), 'p')
   call timer_start(
   \ g:forgetmenot_instance_session_interval,
   \ function('forget_me_not#instance#update'))
@@ -26,7 +26,7 @@ endfunction
 
 function! s:delete_current_instance() abort
   if s:current_session_name is# v:null
-    call delete(s:U.current_running_dir(), 'rf')
+    call delete(s:U.current_instance_dir(), 'rf')
   endif
 endfunction
 
@@ -34,7 +34,7 @@ function! forget_me_not#instance#update(...) abort
   " Acquire lock when s:current_session_name is set.
   " Because multiple writes may occur at same time.
   if s:current_session_name is# v:null
-    let dir = s:U.current_running_dir()
+    let dir = s:U.current_instance_dir()
     let l:Release = {-> v:null }
   else
     let dir = s:U.named_dir() .. '/' .. s:current_session_name

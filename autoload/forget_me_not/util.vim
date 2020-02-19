@@ -17,11 +17,11 @@ function! s:required_dirs() abort
   \]
 endfunction
 
-function! s:running_dir() abort
+function! s:instance_dir() abort
   return expand(g:forgetmenot_base_dir .. '/instance')
 endfunction
 
-function! s:current_running_dir() abort
+function! s:current_instance_dir() abort
   return expand(g:forgetmenot_base_dir .. '/instance/' .. getpid())
 endfunction
 
@@ -86,8 +86,8 @@ let s:export = #{
 \ clean_up: function('s:clean_up'),
 \ acquire_lock: function('s:acquire_lock'),
 \ required_dirs: function('s:required_dirs'),
-\ running_dir: function('s:running_dir'),
-\ current_running_dir: function('s:current_running_dir'),
+\ instance_dir: function('s:instance_dir'),
+\ current_instance_dir: function('s:current_instance_dir'),
 \ named_dir: function('s:named_dir'),
 \ echo_error: function('s:echo_error'),
 \ echo_info: function('s:echo_info'),
