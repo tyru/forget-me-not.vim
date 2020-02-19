@@ -84,7 +84,7 @@ function! s:do_read(session_name, stale, named, silent, is_recover) abort
     else
       echo 'Select a session to restore.'
     endif
-    let list = sessions->map({i,s -> (i + 1) .. '. ' s:format_session(s) })
+    let list = sessions->map({i,s -> (i + 1) .. '. ' .. s:format_session(s) })
     let nr = inputlist(list)->str2nr()
     let session_file = list->get(nr - 1, {})->get('session_file', '')
   endif
