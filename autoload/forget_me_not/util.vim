@@ -11,18 +11,18 @@ function! s:required_dirs() abort
   return [
   \ dir,
   \ dir .. '/lock',
-  \ dir .. '/running',
-  \ dir .. '/running/' .. getpid(),
+  \ dir .. '/instance',
+  \ dir .. '/instance/' .. getpid(),
   \ dir .. '/named',
   \]
 endfunction
 
 function! s:running_dir() abort
-  return expand(g:forgetmenot_base_dir .. '/running')
+  return expand(g:forgetmenot_base_dir .. '/instance')
 endfunction
 
 function! s:current_running_dir() abort
-  return expand(g:forgetmenot_base_dir .. '/running/' .. getpid())
+  return expand(g:forgetmenot_base_dir .. '/instance/' .. getpid())
 endfunction
 
 function! s:named_dir() abort

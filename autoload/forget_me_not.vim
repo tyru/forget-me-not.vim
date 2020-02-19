@@ -3,7 +3,7 @@ scriptversion 4
 
 " TODO
 " * Save session per tab, window?
-" * Integrate with git (make .git in 'lock', 'running' directories)
+" * Integrate with git (make .git in 'lock/*', 'instance/*' directories)
 
 let s:U = forget_me_not#util#export()
 
