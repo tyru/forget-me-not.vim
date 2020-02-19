@@ -80,20 +80,11 @@ function! s:is_stale(info) abort
   return mtime > 0 && localtime() - interval > mtime
 endfunction
 
-function! s:get_running_pid_infos() abort
-  let dir = s:running_dir()
-  return glob(s:running_dir() .. '/*', 1, 1)
-    \->map({-> #{
-    \   pid: str2nr(fnamemodify(v:val, ':t')),
-    \   session_file: v:val .. '/Session.vim',
-    \}})
-endfunction
-
 " TODO use popup instead of inputlist()
 " TODO show brief description (buffer names?) for each pid
 function! s:cmd_recover(args) abort
   let name = ''
-  let stale = v:false
+  let stale = v:null
   let silent = v:false
   for i in range(1, len(a:args) - 1)
     let arg = a:args[i]
@@ -103,6 +94,8 @@ function! s:cmd_recover(args) abort
     endif
     if arg ==# '-stale'
       let stale = v:true
+    elseif arg ==# '-unstale'
+      let stale = v:false
     elseif arg ==# '-silent'
       let silent = v:true
       let stale = v:true
@@ -115,11 +108,8 @@ function! s:cmd_recover(args) abort
       return
     endif
   else
-    let infos = s:get_running_pid_infos()
-    if stale
-      let infos = infos->filter({-> s:is_stale(v:val) })
-    endif
-    if empty(infos)
+    let sessions = s:get_sessions(#{stale: stale})
+    if empty(sessions)
       if !silent
         echo 'No sessions to restore.'
       endif
@@ -130,10 +120,9 @@ function! s:cmd_recover(args) abort
     else
       echo 'Select a session to restore.'
     endif
-    let list = infos->map({->
-    \ printf('%s (pid was %d)', strftime(getftime(v:val.session_file)), v:val.pid) })
-    let pid = inputlist(list)->str2nr()
-    let session_file = infos->filter({-> v:val.pid ==# pid })->get(0, {})->get(, '')
+    let list = sessions->map({i,s -> (i + 1) .. '. ' s:format_session(s) })
+    let nr = inputlist(list)->str2nr()
+    let session_file = list->get(nr - 1, {})->get('session_file', '')
   endif
   if !empty(session_file)
     execute 'source' session_file
@@ -175,6 +164,101 @@ function! s:cmd_write(args) abort
   endtry
 endfunction
 
+function! s:cmd_list(args) abort
+  let stale = v:null
+  let named = v:null
+  for i in range(1, len(a:args) - 1)
+    let arg = a:args[i]
+    if arg[0] !=# '-'
+      let name = arg
+      break
+    endif
+    if arg ==# '-stale'
+      let stale = v:true
+    elseif arg ==# '-unstale'
+      let stale = v:false
+    elseif arg ==# '-named'
+      let named = v:true
+    endif
+  endfor
+  let sessions = s:get_sessions(#{named: named, stale: stale})
+  let named_list = sessions->copy()->filter({-> v:val.named })
+  let unnamed_list = sessions->copy()->filter({-> !v:val.named })
+  if !empty(named_list)
+    echo '--- Named ---'
+    for session in named_list
+      echo s:format_session(session)
+    endfor
+  endif
+  if !empty(unnamed_list)
+    echo '--- Others ---'
+    for session in unnamed_list
+      echo s:format_session(session)
+    endfor
+  endif
+endfunction
+
+" Input:
+" * named (Boolean or v:null): filters return value by named (v:true) or
+"                              unnamed (v:false) sessions. v:null or absent key
+"                              returns all sessions.
+" * stale (Boolean or v:null): filters return value by stale (v:true) or
+"                              non-stale (v:false) sessions. v:null or absent key
+"                              returns all sessions.
+" Returns:
+" * name (String): empty if named == v:false
+" * pid (Number): -1 if named == v:true
+" * session_file (String)
+" * named (Boolean)
+function! s:get_sessions(options) abort
+  let named = a:options->get('named', v:null)
+  let stale = a:options->get('stale', v:null)
+  let sessions = []
+  if named is# v:true || named is# v:null
+    let sessions += glob(s:named_dir() .. '/*', 1, 1)
+    \->map({-> #{
+    \   name: fnamemodify(v:val, ':t'),
+    \   pid: -1,
+    \   session_file: v:val .. '/Session.vim',
+    \   named: v:true,
+    \}})
+  endif
+  if named is# v:false || named is# v:null
+    let sessions += glob(s:running_dir() .. '/*', 1, 1)
+    \->map({-> #{
+    \   name: '',
+    \   pid: str2nr(fnamemodify(v:val, ':t')),
+    \   session_file: v:val .. '/Session.vim',
+    \   named: v:false,
+    \}})
+  endif
+  if stale isnot# v:null
+    if stale
+      call filter(sessions, {-> s:is_stale(v:val) })
+    else
+      call filter(sessions, {-> !s:is_stale(v:val) })
+    endif
+  endif
+  return sessions
+endfunction
+
+function! s:format_session(session) abort
+  if a:session.named
+    return a:session.name
+  endif
+  let attrs = []
+  if s:is_stale(a:session)
+    let attrs += ['stale']
+  endif
+  if filereadable(a:session.session_file)
+    let mtime = getftime(a:session.session_file)
+    let attrs += ['updated at ' .. strftime(g:forgetmenot_list_datetime_format, mtime)]
+  else
+    let attrs += ['not saved yet']
+  endif
+  return printf('instance-%d (%s)', a:session.pid, attrs->join(', '))
+endfunction
+
 function! s:get_session_options(type) abort
   if a:type ==# 'named'
     return g:forgetmenot_named_session_options
@@ -194,6 +278,8 @@ function! forget_me_not#cmd_forget_me_not(args) abort
     call s:cmd_save(a:args)
   elseif a:args[0] ==# 'write' || a:args[0] ==# 'write!'
     call s:cmd_write(a:args)
+  elseif a:args[0] ==# 'list'
+    call s:cmd_list(a:args)
   else
     call s:echo_error('Unknown command: ' .. a:args[0])
   endif
@@ -201,7 +287,7 @@ endfunction
 
 function! forget_me_not#complete_forget_me_not(arglead, cmdline, curpos) abort
   " TODO
-  return ['-help', 'recover', 'save', 'write']
+  return ['-help', 'recover', 'save', 'write', 'list']
 endfunction
 
 

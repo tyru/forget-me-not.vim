@@ -8,7 +8,11 @@ if !exists('g:forgetmenot_instance_session_interval')
   let g:forgetmenot_instance_session_interval = 60 * 1000
 endif
 if !exists('g:forgetmenot_named_session_options')
-  let g:forgetmenot_named_session_options = 'blank,curdir,folds,help,localoptions,options,tabpages,terminal,winsize'
+  let g:forgetmenot_named_session_options =
+  \ 'blank,curdir,folds,help,localoptions,options,tabpages,terminal,winsize'
+endif
+if !exists('g:forgetmenot_list_datetime_format')
+  let g:forgetmenot_list_datetime_format = '%c'
 endif
 
 
