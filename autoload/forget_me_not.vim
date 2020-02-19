@@ -5,6 +5,8 @@ scriptversion 4
 " * Save session per tab, window?
 " * Integrate with git (make .git in 'lock/*', 'instance/*' directories)
 " * Write test
+" * Replace whole tabpages when :ForgetMeNot recover and :ForgetMeNot read
+" * Allow '/' in session name?
 
 let s:U = forget_me_not#util#export()
 
