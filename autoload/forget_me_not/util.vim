@@ -53,7 +53,7 @@ endfunction
 function! s:acquire_lock(name, retry, interval) abort
   let name = substitute(a:name, '[/\\]', '-', 'g')
   let dir = expand(g:forgetmenot_base_dir .. '/lock/' .. name)
-  for _ in range(a:retry)
+  for _ in range(max([a:retry, 0]) + 1)
     try
       call mkdir(dir)
       break
@@ -62,7 +62,7 @@ function! s:acquire_lock(name, retry, interval) abort
     endtry
   endfor
   if !isdirectory(dir)
-    throw s:exception('failed to acquire lock')
+    return [{-> v:null }, "failed to acquire lock '" .. a:name .. "'"]
   endif
   let l:Release = function('delete', [dir, 'd'])
   let s:created_lock_files += [l:Release]
@@ -70,7 +70,7 @@ function! s:acquire_lock(name, retry, interval) abort
     call l:Release()
     eval filter(s:created_lock_files, {-> v:val isnot# l:Release })
   endfunction
-  return {-> l:Release()}
+  return [{-> l:Release()}, v:null]
 endfunction
 
 

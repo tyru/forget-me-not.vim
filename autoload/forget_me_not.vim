@@ -107,7 +107,11 @@ function! s:do_write(name, dir, is_save) abort
   let file = a:dir .. '/Session.vim'
   " Acquire lock to write to the session file.
   " Because if 'a:name' is current session, multiple writes may occur at same time.
-  let l:Release = s:U.acquire_lock('name-' .. a:name, 3, 200)
+  let [l:Release, err] = s:U.acquire_lock('name-' .. a:name, 3, 500)
+  if err isnot# v:null
+    call s:U.echo_error("Another Vim is accessing '" .. a:name .. "' session: " .. err)
+    return
+  endif
   let saved = &l:sessionoptions
   try
     let &l:sessionoptions = s:get_session_options('named')

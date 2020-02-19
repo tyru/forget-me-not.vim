@@ -38,7 +38,12 @@ function! forget_me_not#instance#update(...) abort
     let l:Release = {-> v:null }
   else
     let dir = s:U.named_dir() .. '/' .. s:current_session_name
-    let l:Release = forget_me_not#util#acquire_lock('name-' .. s:current_session_name, 3, 200)
+    let [l:Release, err] = s:U.acquire_lock('name-' .. s:current_session_name, 3, 500)
+    if err isnot# v:null
+      call s:U.echo_error(
+      \ "Another Vim is accessing '" .. s:current_session_name .. "' session: " .. err)
+      return
+    endif
   endif
   try
     if !isdirectory(dir)
