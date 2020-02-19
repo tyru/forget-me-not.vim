@@ -1,4 +1,4 @@
-*forget_me_not.txt*	Recover previous session
+*forget_me_not.txt*	Session management plugin
 
 Author: tyru <tyru.exe@gmail.com>
 Copyright (C) 2020-2020 tyru <tyru.exe@gmail.com>
@@ -26,6 +26,7 @@ Licence: MIT license  {{{
 ==============================================================================
 CONTENTS					*forgetmenot-contents*
 
+SETTINGS			|forgetmenot-settings|
 REQUIREMENTS			|forgetmenot-requirements|
 INTRODUCTION			|forgetmenot-introduction|
 INTERFACE			|forgetmenot-interface|
@@ -38,8 +39,16 @@ REQUIREMENTS					*forgetmenot-requirements*
 * Vim 8.2+
 
 ==============================================================================
-INTRODUCTION					*forgetmenot-introduction*
+SETTINGS					*forgetmenot-settings*
 
+Recommended settings:
+>
+	" Try to recover a stale session (which should be vim exited
+	" abnormally) at vim startup
+	autocmd VimEnter * ForgetMeNot recover -stale -silent
+
+==============================================================================
+INTRODUCTION					*forgetmenot-introduction*
 >
 	" Recover a previous session (show previous sessions list)
 	:ForgetMeNot recover
@@ -49,11 +58,6 @@ INTRODUCTION					*forgetmenot-introduction*
 
 	" Recover the named session
 	:ForgetMeNot recover my-big-project
-
-	" Try to recover a stale session (which should be vim exited
-	" abnormally) at vim startup
-	autocmd VimEnter * ForgetMeNot recover -stale -silent
-
 
 ==============================================================================
 INTERFACE					*forgetmenot-interface*
@@ -71,9 +75,8 @@ COMMANDS					*forgetmenot-commands*
 
 						*:ForgetMeNot-recover*
 :ForgetMeNot recover [-stale] [-silent] [{name}]
-	Recover a previous session per vim instance, tab.
-	Recording tab sessions are optional (disabled by default. To enable it,
-	see |g:forgetmenot_enable_tab_session|).
+	Select and recover a previous session from vim instances, named
+	sessions.
 	If {name} was given, recover the named session if it exists.
 	TODO: -stale, -silent
 
@@ -99,22 +102,13 @@ VARIABLES					*forgetmenot-variables*
 				*g:forgetmenot_instance_session_interval*
 g:forgetmenot_instance_session_interval
 			(default: `60 * 1000`)
-	(TODO)
+	Save instance session each this interval.
 
 				*g:forgetmenot_base_dir*
 g:forgetmenot_base_dir
 			(default: `'~/.local/cache/vim-forget-me-not'`)
-	
-
-				*g:forgetmenot_enable_tab_session*
-g:forgetmenot_enable_tab_session
-			(default: `0`)
-	(TODO)
-
-				*g:forgetmenot_enable_window_session*
-g:forgetmenot_enable_window_session
-			(default: `0`)
-	(TODO)
+	Base directory for this plugin.
+	All files managed by this plugin are stored under this directory.
 
 ==============================================================================
 vim:tw=78:fo=tcq2mM:ts=8:ft=help:norl:noet
