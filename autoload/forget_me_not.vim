@@ -41,6 +41,8 @@ function! s:cmd_recover(args) abort
       let stale = v:false
     elseif arg ==# '-named'
       let named = v:true
+    elseif arg ==# '-unnamed'
+      let named = v:false
     elseif arg ==# '-silent'
       let silent = v:true
     endif
@@ -223,6 +225,8 @@ function! s:cmd_list(args) abort
       let stale = v:false
     elseif arg ==# '-named'
       let named = v:true
+    elseif arg ==# '-unnamed'
+      let named = v:false
     endif
   endfor
   let sessions = s:get_sessions(#{named: named, stale: stale})
