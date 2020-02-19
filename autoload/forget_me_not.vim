@@ -205,32 +205,13 @@ function! forget_me_not#complete_forget_me_not(arglead, cmdline, curpos) abort
 endfunction
 
 
-function! s:save_instance_session(_timer) abort
-  let dir = s:current_running_dir()
-  if !isdirectory(dir)
-    call s:echo_error('No such directory: ' .. dir)
-  endif
-  execute 'mksession!' dir .. '/Session.vim'
-endfunction
-
-function! s:delete_current_instance() abort
-  call delete(s:current_running_dir(), 'rf')
-endfunction
-
 function! s:init() abort
-  try
-    " Create directories
-    for dir in s:required_dirs()
-      call mkdir(dir, 'p')
-    endfor
-    " Release lock dirs
-    autocmd forget-me-not VimLeavePre * eval s:created_lock_files->map({-> v:val() })
-  catch
-    " TODO: Disable plugin
-    call s:echo_error('Disabling plugin because initialization failed...')
-    call s:echo_error('Error: ' .. v:exception)
-    call s:echo_error('Where: ' .. v:throwpoint)
-  endtry
+  " Create directories
+  for dir in s:required_dirs()
+    call mkdir(dir, 'p')
+  endfor
+  " Release lock dirs
+  autocmd forget-me-not VimLeavePre * eval s:created_lock_files->map({-> v:val() })
 endfunction
 
 call s:init()
