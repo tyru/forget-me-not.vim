@@ -7,6 +7,8 @@ scriptversion 4
 " * Write test
 " * Replace whole tabpages when :ForgetMeNot recover and :ForgetMeNot read
 " * Allow '/' in session name?
+" * Rename recover to switch
+" * Allow abbreviated command name
 
 let s:U = forget_me_not#util#export()
 
