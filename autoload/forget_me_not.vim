@@ -12,10 +12,10 @@ scriptversion 4
 let s:U = forget_me_not#util#export()
 
 
-" 15 * 1000 = write interval
-function! s:is_stale(info) abort
-  let interval = g:forgetmenot_instance_session_interval + 15 * 1000
-  let mtime = getftime(a:info.session_file)
+" 15 = write interval
+function! s:is_stale(session) abort
+  let interval = g:forgetmenot_instance_session_interval / 1000 + 15
+  let mtime = getftime(a:session.session_file)
   return mtime > 0 && localtime() - interval > mtime
 endfunction
 
