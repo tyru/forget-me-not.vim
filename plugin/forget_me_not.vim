@@ -28,6 +28,7 @@ function! s:required_dirs() abort
   let dir = expand(g:forgetmenot_session_dir)
   return [
   \ dir,
+  \ dir .. '/lock',
   \ dir .. '/running',
   \ dir .. '/running/' .. getpid(),
   \ dir .. '/named',
@@ -47,6 +48,32 @@ function! s:named_dir() abort
 endfunction
 
 
+let s:created_lock_files = []
+
+" TODO: stricter escape for a:name
+function! s:acquire_lock(name, retry, interval) abort
+  let name = substitute(a:name, '[/\\]', '-', 'g')
+  let dir = expand(g:forgetmenot_session_dir .. '/lock/' .. name)
+  for _ in range(a:retry)
+    try
+      call mkdir(dir)
+      break
+    catch
+      execute 'sleep' a:interval .. 'm'
+    endtry
+  endfor
+  if !isdirectory(dir)
+    throw s:exception('failed to acquire lock')
+  endif
+  let l:Release = function('delete', [dir, 'd'])
+  let s:created_lock_files += [l:Release]
+  function! s:release() abort closure
+    call l:Release()
+    eval filter(s:created_lock_files, {-> v:val isnot# l:Release })
+  endfunction
+  return {-> l:Release()}
+endfunction
+
 function! s:echo_error(msg, hist = v:true) abort
   echohl ErrorMsg
   if a:hist
@@ -58,10 +85,7 @@ function! s:echo_error(msg, hist = v:true) abort
 endfunction
 
 function! s:exception(msg) abort
-  return #{
-  \ _tag: 'forget_me_not',
-  \ msg: a:msg,
-  \}
+  return 'forget-me-not: ' .. a:msg
 endfunction
 
 " 15 * 1000 = write interval
@@ -153,14 +177,16 @@ function! s:cmd_write(args) abort
   endif
   call mkdir(dir, 'p')
   let file = dir .. '/Session.vim'
-  " TODO Acquire lock to write to the file.
+  " Acquire lock to write to the session file.
   " Because if 'name' is current session, multiple writes may occur at same time.
+  let l:Release = s:acquire_lock('name-' .. name, 3, 200)
   let saved = &l:sessionoptions
   try
     let &l:sessionoptions = s:get_session_options('named')
     execute 'mksession!' file
   finally
     let &l:sessionoptions = saved
+    call l:Release()
   endtry
 endfunction
 
@@ -223,6 +249,7 @@ function! s:init() abort
     " Save a instance session every 'g:forgetmenot_instance_session_interval'
     call timer_start(g:forgetmenot_instance_session_interval, function('s:save_instance_session'))
     autocmd forget-me-not VimLeavePre * call s:delete_current_instance()
+    autocmd forget-me-not VimLeavePre * eval s:created_lock_files->map({-> v:val() })
   catch
     " TODO: Disable plugin
     call s:echo_error('Disabling plugin because initialization failed...')
