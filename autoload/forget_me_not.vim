@@ -78,14 +78,13 @@ function! s:do_read(session_name, stale, named, silent, is_switch) abort
       endif
       return
     endif
-    if a:stale
-      call s:U.echo_error('Last session exited abnormally! Select a session to restore.', v:false)
+    let list = sessions->copy()->map({i,s -> (i + 1) .. '. ' .. s:format_session(s) })
+    let nr = inputlist(['Select a session to restore.'] + list)
+    if nr > 0
+      let session_file = sessions->get(nr - 1, {})->get('session_file', '')
     else
-      echo 'Select a session to restore.'
+      let session_file = ''
     endif
-    let list = sessions->map({i,s -> (i + 1) .. '. ' .. s:format_session(s) })
-    let nr = inputlist(list)->str2nr()
-    let session_file = list->get(nr - 1, {})->get('session_file', '')
   endif
   if empty(session_file)
     if !a:silent
