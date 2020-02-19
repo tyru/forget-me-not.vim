@@ -40,6 +40,14 @@ function! s:echo_error(msg, hist = v:true) abort
   echohl None
 endfunction
 
+function! s:echo_info(msg, hist = v:true) abort
+  if a:hist
+    echomsg 'forget-me-not:' a:msg
+  else
+    echo 'forget-me-not:' a:msg
+  endif
+endfunction
+
 function! s:exception(msg) abort
   return 'forget-me-not: ' .. a:msg
 endfunction
@@ -82,6 +90,7 @@ let s:export = #{
 \ current_running_dir: function('s:current_running_dir'),
 \ named_dir: function('s:named_dir'),
 \ echo_error: function('s:echo_error'),
+\ echo_info: function('s:echo_info'),
 \ exception: function('s:exception'),
 \}
 function! forget_me_not#util#export() abort

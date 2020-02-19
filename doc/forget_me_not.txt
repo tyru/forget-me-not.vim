@@ -89,6 +89,16 @@ COMMANDS					*forgetmenot-commands*
 	-stale lists only stale sessions.
 	-silent does not echo anything when there are no sessions to restore.
 
+						*:ForgetMeNot-read*
+:ForgetMeNot read {name}
+	Load the {name} session.
+	This works like |:read| for session file.
+
+	This command is almost same as |:ForgetMeNot-recover| but this doesn't
+	set current session to {name} when {name} was given.
+	Thus changes after running this command won't save to the specified
+	named session.
+
 						*:ForgetMeNot-save*
 :ForgetMeNot save[!] [{name}]
 	Save current session as {name}.

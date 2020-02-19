@@ -18,7 +18,6 @@ function! s:is_stale(info) abort
   return mtime > 0 && localtime() - interval > mtime
 endfunction
 
-" TODO use popup instead of inputlist()
 function! s:cmd_recover(args) abort
   let session_name = ''
   let stale = v:null
@@ -40,21 +39,38 @@ function! s:cmd_recover(args) abort
       let silent = v:true
     endif
   endfor
-  if !empty(session_name)
-    let session_file = s:U.named_dir() .. '/' .. session_name .. '/Session.vim'
+  call s:do_read(session_name, stale, named, silent, v:true)
+endfunction
+
+function! s:cmd_read(args) abort
+  let session_name = a:args->get(1, '')
+  if empty(session_name)
+    call s:U.echo_error('No name specified. see help :ForgetMeNot-read')
+    return
+  endif
+  let stale = v:null
+  let named = v:null
+  let silent =  v:false
+  call s:do_read(session_name, stale, named, silent, v:false)
+endfunction
+
+" TODO use popup instead of inputlist()
+function! s:do_read(session_name, stale, named, silent, is_recover) abort
+  if !empty(a:session_name)
+    let session_file = s:U.named_dir() .. '/' .. a:session_name .. '/Session.vim'
     if !filereadable(session_file)
-      call s:U.echo_error('No such named session: ' .. session_name)
+      call s:U.echo_error('No such named session: ' .. a:session_name)
       return
     endif
   else
-    let sessions = s:get_sessions(#{named: named, stale: stale})
+    let sessions = s:get_sessions(#{named: a:named, stale: a:stale})
     if empty(sessions)
-      if !silent
+      if !a:silent
         echo 'No sessions to restore.'
       endif
       return
     endif
-    if stale
+    if a:stale
       call s:U.echo_error('Last session exited abnormally! Select a session to restore.', v:false)
     else
       echo 'Select a session to restore.'
@@ -63,14 +79,15 @@ function! s:cmd_recover(args) abort
     let nr = inputlist(list)->str2nr()
     let session_file = list->get(nr - 1, {})->get('session_file', '')
   endif
-  if !empty(session_file)
-    execute 'source' session_file
-    if !empty(session_name)
-      call forget_me_not#instance#set_session_name(session_name)
+  if empty(session_file)
+    if !a:silent
+      echo 'No sessions to restore.'
     endif
-  else
-    echo 'No sessions to restore.'
     return
+  endif
+  execute 'source' session_file
+  if a:is_recover && !empty(a:session_name)
+    call forget_me_not#instance#set_session_name(a:session_name)
   endif
 endfunction
 
@@ -147,6 +164,7 @@ function! s:do_write(name, dir, is_save) abort
   if a:is_save
     call forget_me_not#instance#set_session_name(a:name)
   endif
+  call s:U.echo_info("Written '" .. a:name .. "' session.")
 endfunction
 
 function! s:cmd_delete(args) abort
@@ -300,6 +318,8 @@ function! forget_me_not#cmd_forget_me_not(args) abort
   endif
   if a:args[0] ==# 'recover'
     call s:cmd_recover(a:args)
+  elseif a:args[0] ==# 'read'
+    call s:cmd_read(a:args)
   elseif a:args[0] ==# 'save' || a:args[0] ==# 'save!'
     call s:cmd_save(a:args)
   elseif a:args[0] ==# 'write' || a:args[0] ==# 'write!'
@@ -315,7 +335,7 @@ endfunction
 
 function! forget_me_not#complete_forget_me_not(arglead, cmdline, curpos) abort
   " TODO
-  return ['-help', 'recover', 'save', 'save!', 'write', 'write!', 'delete', 'list']
+  return ['-help', 'recover', 'read', 'save', 'save!', 'write', 'write!', 'delete', 'list']
 endfunction
 
 
