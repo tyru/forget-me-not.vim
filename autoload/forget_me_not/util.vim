@@ -3,19 +3,6 @@ scriptversion 4
 
 let s:created_lock_files = []
 
-function! forget_me_not#util#export() abort
-  return #{
-  \ clean_up: function('s:clean_up'),
-  \ acquire_lock: function('s:acquire_lock'),
-  \ required_dirs: function('s:required_dirs'),
-  \ running_dir: function('s:running_dir'),
-  \ current_running_dir: function('s:current_running_dir'),
-  \ named_dir: function('s:named_dir'),
-  \ echo_error: function('s:echo_error'),
-  \ exception: function('s:exception'),
-  \}
-endfunction
-
 
 " Dir paths
 
@@ -84,4 +71,19 @@ function! s:acquire_lock(name, retry, interval) abort
     eval filter(s:created_lock_files, {-> v:val isnot# l:Release })
   endfunction
   return {-> l:Release()}
+endfunction
+
+
+let s:export = #{
+\ clean_up: function('s:clean_up'),
+\ acquire_lock: function('s:acquire_lock'),
+\ required_dirs: function('s:required_dirs'),
+\ running_dir: function('s:running_dir'),
+\ current_running_dir: function('s:current_running_dir'),
+\ named_dir: function('s:named_dir'),
+\ echo_error: function('s:echo_error'),
+\ exception: function('s:exception'),
+\}
+function! forget_me_not#util#export() abort
+  return s:export
 endfunction
