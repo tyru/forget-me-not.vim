@@ -93,17 +93,23 @@ COMMANDS					*forgetmenot-commands*
 :ForgetMeNot save[!] [{name}]
 	Save current session as {name}.
 	This works like |:save| for session file.
+
 	This sets current session to {name}, and keep writing to the session
 	every |g:forgetmenot_instance_session_interval| milliseconds.
+
+	If [!] was not given and {name} exists, it failed.
+	If [!] was given, overwrite the session.
 
 						*:ForgetMeNot-write*
 :ForgetMeNot write[!] [{name}]
 	Write current session as {name}.
 	This works like |:write| for session file.
+
 	This command is almost same as |:ForgetMeNot-save| but this doesn't
 	set current session to {name} when {name} was given.
 	Thus changes after running this command won't save to the specified
 	named session.
+
 	If [!] was not given and {name} exists, it failed.
 	If [!] was given, overwrite the session.
 						*:ForgetMeNot-list*

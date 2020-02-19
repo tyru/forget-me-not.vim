@@ -74,9 +74,16 @@ endfunction
 
 function! s:cmd_save(args) abort
   let name = a:args->get(1, '')
+  let curname = forget_me_not#instance#get_session_name()
   if empty(name)
-    call s:U.echo_error('No name specified. see help :ForgetMeNot-save')
-    return
+    if curname is# v:null
+      call s:U.echo_error('No name specified. see help :ForgetMeNot-save')
+      return
+    endif
+    let name = curname
+    let a:args[0] = 'save!'
+  elseif name ==# curname
+    let a:args[0] = 'save!'
   endif
   let dir = s:U.named_dir() .. '/' .. name
   if isdirectory(dir) && a:args[0] !=# 'save!'
@@ -84,19 +91,34 @@ function! s:cmd_save(args) abort
     \ "Use ':ForgetMeNot save!' to overwrite the session.")
     return
   endif
+  if empty(name) && curname is# v:null
+    call forget_me_not#instance#update()
+    return
+  endif
   call s:do_write(name, dir, v:true)
 endfunction
 
 function! s:cmd_write(args) abort
   let name = a:args->get(1, '')
+  let curname = forget_me_not#instance#get_session_name()
   if empty(name)
-    call s:U.echo_error('No name specified. see help :ForgetMeNot-write')
-    return
+    if curname is# v:null
+      call s:U.echo_error('No name specified. see help :ForgetMeNot-write')
+      return
+    endif
+    let name = curname
+    let a:args[0] = 'write!'
+  elseif name ==# curname
+    let a:args[0] = 'write!'
   endif
   let dir = s:U.named_dir() .. '/' .. name
   if isdirectory(dir) && a:args[0] !=# 'write!'
     call s:U.echo_error("Session '" .. name .. "' already exists. " ..
     \ "Use ':ForgetMeNot write!' to overwrite the session.")
+    return
+  endif
+  if empty(name) && curname is# v:null
+    call forget_me_not#instance#update()
     return
   endif
   call s:do_write(name, dir, v:false)
@@ -121,9 +143,6 @@ function! s:do_write(name, dir, is_save) abort
     call l:Release()
   endtry
   if a:is_save
-    if empty(a:name) && forget_me_not#instance#get_session_name() isnot# v:null
-      call forget_me_not#instance#update()
-    endif
     call forget_me_not#instance#set_session_name(a:name)
   endif
 endfunction
