@@ -147,6 +147,36 @@ function! s:do_write(name, dir, is_save) abort
   endif
 endfunction
 
+function! s:cmd_delete(args) abort
+  let name = a:args->get(1, '')
+  let curname = forget_me_not#instance#get_session_name()
+  if empty(name)
+    call s:U.echo_error('No name specified. see help :ForgetMeNot-delete')
+    return
+  elseif name ==# curname
+    call s:U.echo_error('Cannot delete current session.')
+    return
+  endif
+  " Acquire lock to write to the session file.
+  " Because multiple writes may occur at same time.
+  let [l:Release, err] = s:U.acquire_lock('name-' .. name, 3, 500)
+  if err isnot# v:null
+    call s:U.echo_error("Another Vim is accessing '" .. name .. "' session: " .. err)
+    return
+  endif
+  try
+    let dir = s:U.named_dir() .. '/' .. name
+    call delete(dir, 'rf')
+    if isdirectory(dir)
+      call s:U.echo_error('Could not delete directory: ' .. dir)
+      return
+    endif
+    echomsg "Deleted '" .. name .. "' session."
+  finally
+    call l:Release()
+  endtry
+endfunction
+
 function! s:cmd_list(args) abort
   let stale = v:null
   let named = v:null
@@ -272,6 +302,8 @@ function! forget_me_not#cmd_forget_me_not(args) abort
     call s:cmd_save(a:args)
   elseif a:args[0] ==# 'write' || a:args[0] ==# 'write!'
     call s:cmd_write(a:args)
+  elseif a:args[0] ==# 'delete'
+    call s:cmd_delete(a:args)
   elseif a:args[0] ==# 'list'
     call s:cmd_list(a:args)
   else
@@ -281,7 +313,7 @@ endfunction
 
 function! forget_me_not#complete_forget_me_not(arglead, cmdline, curpos) abort
   " TODO
-  return ['-help', 'recover', 'save', 'save!', 'write', 'write!', 'list']
+  return ['-help', 'recover', 'save', 'save!', 'write', 'write!', 'delete', 'list']
 endfunction
 
 

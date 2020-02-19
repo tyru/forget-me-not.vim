@@ -112,6 +112,12 @@ COMMANDS					*forgetmenot-commands*
 
 	If [!] was not given and {name} exists, it failed.
 	If [!] was given, overwrite the session.
+
+						*:ForgetMeNot-delete*
+:ForgetMeNot delete {name}
+	Delete specified named session.
+	NOTE: This command cannot unnamed session.
+
 						*:ForgetMeNot-list*
 :ForgetMeNot list [-stale] [-unstale] [-named]
 	List sessions specified by options.
