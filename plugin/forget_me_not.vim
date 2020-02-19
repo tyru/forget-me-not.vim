@@ -20,30 +20,8 @@ command! -bar -nargs=* -complete=customlist,forget_me_not#complete_forget_me_not
 \   ForgetMeNot call forget_me_not#cmd_forget_me_not([<f-args>])
 
 
-function! s:current_running_dir() abort
-  return expand(g:forgetmenot_base_dir .. '/running/' .. getpid())
-endfunction
+augroup forget-me-not
+  autocmd!
+augroup END
 
-function! s:save_instance_session(_timer) abort
-  let dir = s:current_running_dir()
-  if !isdirectory(dir)
-    call s:echo_error('No such directory: ' .. dir)
-  endif
-  execute 'mksession!' dir .. '/Session.vim'
-endfunction
-
-function! s:delete_current_instance() abort
-  call delete(s:current_running_dir(), 'rf')
-endfunction
-
-function! s:init() abort
-  " Save a instance session every 'g:forgetmenot_instance_session_interval'
-  call mkdir(s:current_running_dir(), 'p')
-  call timer_start(g:forgetmenot_instance_session_interval, function('s:save_instance_session'))
-  augroup forget-me-not
-    autocmd!
-    autocmd VimLeavePre * call s:delete_current_instance()
-  augroup END
-endfunction
-
-call s:init()
+call forget_me_not#instance#run_timer()

@@ -4,8 +4,7 @@ scriptversion 4
 " TODO
 " * Save session per tab, window?
 " * Integrate with git (make .git in 'lock', 'running' directories)
-" * Switch session
-" * Track current instance session
+
 
 " Dir paths
 
@@ -126,6 +125,10 @@ function! s:cmd_recover(args) abort
   endif
   if !empty(session_file)
     execute 'source' session_file
+    if !empty(name)
+      call forget_me_not#instance#delete_current_instance()
+      call forget_me_not#instance#set_session_name(name)
+    endif
   else
     echo 'No sessions to restore.'
     return
@@ -133,8 +136,18 @@ function! s:cmd_recover(args) abort
 endfunction
 
 function! s:cmd_save(args) abort
-  " TODO
-  call s:cmd_write(a:args)
+  let name = a:args->get(1, '')
+  if empty(name)
+    call s:echo_error('No name specified. see help :ForgetMeNot-save')
+    return
+  endif
+  let dir = s:named_dir() .. '/' .. name
+  if isdirectory(dir) && a:args[0] !=# 'save!'
+    call s:echo_error("Session '" .. name .. "' already exists. " ..
+    \ "Use ':ForgetMeNot save!' to overwrite the session.")
+    return
+  endif
+  call s:do_write(name, dir, v:true)
 endfunction
 
 function! s:cmd_write(args) abort
@@ -149,11 +162,15 @@ function! s:cmd_write(args) abort
     \ "Use ':ForgetMeNot write!' to overwrite the session.")
     return
   endif
-  call mkdir(dir, 'p')
-  let file = dir .. '/Session.vim'
+  call s:do_write(name, dir, v:false)
+endfunction
+
+function! s:do_write(name, dir, is_save) abort
+  call mkdir(a:dir, 'p')
+  let file = a:dir .. '/Session.vim'
   " Acquire lock to write to the session file.
-  " Because if 'name' is current session, multiple writes may occur at same time.
-  let l:Release = s:acquire_lock('name-' .. name, 3, 200)
+  " Because if 'a:name' is current session, multiple writes may occur at same time.
+  let l:Release = s:acquire_lock('name-' .. a:name, 3, 200)
   let saved = &l:sessionoptions
   try
     let &l:sessionoptions = s:get_session_options('named')
@@ -162,6 +179,9 @@ function! s:cmd_write(args) abort
     let &l:sessionoptions = saved
     call l:Release()
   endtry
+  if a:is_save
+    call forget_me_not#instance#set_session_name(a:name)
+  endif
 endfunction
 
 function! s:cmd_list(args) abort
@@ -243,9 +263,18 @@ function! s:get_sessions(options) abort
 endfunction
 
 function! s:format_session(session) abort
+  let curname = forget_me_not#instance#get_session_name()
   if a:session.named
-    return a:session.name
+    let attrs = []
+    if filereadable(a:session.session_file)
+      let mtime = getftime(a:session.session_file)
+      let attrs += ['updated at ' .. strftime(g:forgetmenot_list_datetime_format, mtime)]
+    endif
+    let current = curname is# v:null ? '  ' : curname ==# a:session.name ? '* ' : '  '
+    let attrs_str = (empty(attrs) ? '' : ' (' .. attrs->join(', ') .. ')')
+    return current .. a:session.name .. attrs_str
   endif
+  let current = curname isnot# v:null ? '  ' : getpid() ==# a:session.pid ? '* ' : '  '
   let attrs = []
   if s:is_stale(a:session)
     let attrs += ['stale']
@@ -256,7 +285,9 @@ function! s:format_session(session) abort
   else
     let attrs += ['not saved yet']
   endif
-  return printf('instance-%d (%s)', a:session.pid, attrs->join(', '))
+  let name = 'instance-' .. a:session.pid
+  let attrs_str = (empty(attrs) ? '' : ' (' .. attrs->join(', ') .. ')')
+  return current .. name .. attrs_str
 endfunction
 
 function! s:get_session_options(type) abort
