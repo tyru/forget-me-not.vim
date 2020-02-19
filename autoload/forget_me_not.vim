@@ -5,9 +5,8 @@ scriptversion 4
 " * Save session per tab, window?
 " * Integrate with git (make .git in 'lock/*', 'instance/*' directories)
 " * Write test
-" * Replace whole tabpages when :ForgetMeNot recover and :ForgetMeNot read
+" * Replace whole tabpages when :ForgetMeNot switch and :ForgetMeNot read
 " * Allow '/' in session name?
-" * Rename recover to switch
 " * Allow abbreviated command name
 
 let s:U = forget_me_not#util#export()
@@ -20,7 +19,7 @@ function! s:is_stale(info) abort
   return mtime > 0 && localtime() - interval > mtime
 endfunction
 
-function! s:cmd_recover(args) abort
+function! s:cmd_switch(args) abort
   let session_name = ''
   let stale = v:null
   let named = v:null
@@ -63,7 +62,7 @@ function! s:cmd_read(args) abort
 endfunction
 
 " TODO use popup instead of inputlist()
-function! s:do_read(session_name, stale, named, silent, is_recover) abort
+function! s:do_read(session_name, stale, named, silent, is_switch) abort
   if !empty(a:session_name)
     let session = s:get_sessions()->filter({-> v:val.name ==# a:session_name })->get(0, {})
     let session_file = session->get('session_file', '')
@@ -95,7 +94,7 @@ function! s:do_read(session_name, stale, named, silent, is_recover) abort
     return
   endif
   execute 'source' session_file
-  if a:is_recover && !empty(a:session_name)
+  if a:is_switch && !empty(a:session_name)
     call forget_me_not#instance#set_session_name(a:session_name)
   endif
 endfunction
@@ -331,8 +330,8 @@ function! forget_me_not#cmd_forget_me_not(args) abort
     help :ForgetMeNot
     return
   endif
-  if a:args[0] ==# 'recover'
-    call s:cmd_recover(a:args)
+  if a:args[0] ==# 'switch'
+    call s:cmd_switch(a:args)
   elseif a:args[0] ==# 'read'
     call s:cmd_read(a:args)
   elseif a:args[0] ==# 'save' || a:args[0] ==# 'save!'
@@ -350,7 +349,7 @@ endfunction
 
 function! forget_me_not#complete_forget_me_not(arglead, cmdline, curpos) abort
   " TODO
-  return ['-help', 'recover', 'read', 'save', 'save!', 'write', 'write!', 'delete', 'list']
+  return ['-help', 'switch', 'read', 'save', 'save!', 'write', 'write!', 'delete', 'list']
 endfunction
 
 
