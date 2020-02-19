@@ -4,6 +4,7 @@ scriptversion 4
 " TODO
 " * Save session per tab, window?
 " * Integrate with git (make .git in 'lock/*', 'instance/*' directories)
+" * Write test
 
 let s:U = forget_me_not#util#export()
 
@@ -16,7 +17,6 @@ function! s:is_stale(info) abort
 endfunction
 
 " TODO use popup instead of inputlist()
-" TODO show brief description (buffer names?) for each pid
 function! s:cmd_recover(args) abort
   let session_name = ''
   let stale = v:null
