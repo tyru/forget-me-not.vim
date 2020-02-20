@@ -8,6 +8,7 @@ scriptversion 4
 " * Replace whole tabpages when :ForgetMeNot switch and :ForgetMeNot read
 " * Allow '/' in session name?
 " * Allow abbreviated command name
+" * Add options to :ForgetMeNot save to filter saving tabs, windows
 
 let s:U = forget_me_not#util#export()
 
