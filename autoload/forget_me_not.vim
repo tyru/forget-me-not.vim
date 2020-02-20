@@ -9,6 +9,10 @@ scriptversion 4
 " * Allow '/' in session name?
 " * Allow abbreviated command name
 " * Add options to :ForgetMeNot save to filter saving tabs, windows
+" * Add tab-local variable to hold session name to distinguish session each tab
+"   * Save only current session tabs
+"   * Close only specified session tabs
+"   * ...
 
 let s:U = forget_me_not#util#export()
 
