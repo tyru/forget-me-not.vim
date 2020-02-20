@@ -13,6 +13,7 @@ function! forget_me_not#instance#init() abort
   \ g:forgetmenot_instance_session_interval,
   \ function('forget_me_not#instance#update'),
   \ #{repeat: -1})
+  autocmd forget-me-not VimLeavePre * call forget_me_not#instance#update()
   autocmd forget-me-not VimLeavePre * call s:delete_current_instance()
   autocmd forget-me-not VimLeavePre * call s:U.clean_up()
 endfunction
