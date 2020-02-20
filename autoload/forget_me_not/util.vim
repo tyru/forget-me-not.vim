@@ -58,17 +58,10 @@ function! s:clean_up() abort
 endfunction
 
 " TODO: stricter escape for a:name
-function! s:acquire_lock(name, retry, interval) abort
+function! s:acquire_lock(name) abort
   let name = substitute(a:name, '[/\\]', '-', 'g')
   let dir = expand(g:forgetmenot_base_dir .. '/lock/' .. name)
-  for _ in range(max([a:retry, 0]) + 1)
-    try
-      call mkdir(dir)
-      break
-    catch
-      execute 'sleep' a:interval .. 'm'
-    endtry
-  endfor
+  call mkdir(dir)
   if !isdirectory(dir)
     return [{-> v:null }, "failed to acquire lock '" .. a:name .. "'"]
   endif

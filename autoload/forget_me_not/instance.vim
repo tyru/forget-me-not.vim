@@ -43,7 +43,7 @@ function! forget_me_not#instance#update(...) abort
     let l:Release = {-> v:null }
   else
     let dir = s:U.named_dir() .. '/' .. s:current_session_name
-    let [l:Release, err] = s:U.acquire_lock('name-' .. s:current_session_name, 3, 500)
+    let [l:Release, err] = s:U.acquire_lock('name-' .. s:current_session_name)
     if err isnot# v:null
       call s:U.echo_error(
       \ "Another Vim is accessing '" .. s:current_session_name .. "' session: " .. err)
