@@ -9,7 +9,7 @@ if !exists('g:forgetmenot_instance_session_interval')
 endif
 if !exists('g:forgetmenot_named_session_options')
   let g:forgetmenot_named_session_options =
-  \ 'blank,curdir,folds,help,localoptions,options,tabpages,terminal,winsize'
+  \ 'blank,curdir,folds,help,localoptions,tabpages,terminal,winsize'
 endif
 if !exists('g:forgetmenot_list_datetime_format')
   let g:forgetmenot_list_datetime_format = '%c'
