@@ -50,19 +50,22 @@ Recommended settings:
 ==============================================================================
 INTRODUCTION					*forgetmenot-introduction*
 >
-	" Switch to a previous session (show previous sessions list)
+	" Switch to a saved session (show sessions list and select one to switch)
 	:ForgetMeNot switch
 
 	" Name current session (don't forget when vim exit)
 	:ForgetMeNot save my-big-project
 
-	" Switch the named session
+	" Switch to the named session
 	:ForgetMeNot switch my-big-project
-	" Or switch to an instance session (e.g. stale session)
+	" Or read an instance session (e.g. stale session)
 	:ForgetMeNot read instance/12345
->
+
 	" List all sessions
 	:ForgetMeNot list
+
+	" Delete the session
+	:ForgetMeNot delete my-big-project
 
 ==============================================================================
 INTERFACE					*forgetmenot-interface*

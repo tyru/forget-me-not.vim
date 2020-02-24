@@ -13,6 +13,7 @@ scriptversion 4
 "   * Save only current session tabs
 "   * Close only specified session tabs
 "   * ...
+" * Save 'named' directory under '~/.local/share'
 
 let s:U = forget_me_not#util#export()
 
