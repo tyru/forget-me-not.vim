@@ -14,6 +14,7 @@ scriptversion 4
 "   * Close only specified session tabs
 "   * ...
 " * Save 'named' directory under '~/.local/share'
+" * Replace auto save feature of tyru/project-guide.vim
 
 let s:U = forget_me_not#util#export()
 
