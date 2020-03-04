@@ -35,21 +35,13 @@ function! s:delete_current_instance() abort
 endfunction
 
 function! forget_me_not#instance#update(...) abort
-  " Acquire lock when s:current_session_name is set.
-  " Because multiple writes may occur at same time.
-  if s:current_session_name is# v:null
-    call mkdir(s:U.current_instance_dir(), 'p')
-    let dir = s:U.current_instance_dir()
-    let l:Release = {-> v:null }
-  else
-    let dir = s:U.named_dir() .. '/' .. s:current_session_name
-    let [l:Release, err] = s:U.acquire_lock('name-' .. s:current_session_name)
-    if err isnot# v:null
-      call s:U.echo_error(
-      \ "Another Vim is accessing '" .. s:current_session_name .. "' session: " .. err)
-      return
-    endif
+  if s:current_session_name isnot# v:null
+    call forget_me_not#update_named_session(s:current_session_name, v:false)
+    return
   endif
+  call mkdir(s:U.current_instance_dir(), 'p')
+  let dir = s:U.current_instance_dir()
+  let l:Release = {-> v:null }
   try
     if !isdirectory(dir)
       call s:U.echo_error('No such directory: ' .. dir)

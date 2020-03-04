@@ -149,7 +149,7 @@ function! s:cmd_save(args) abort
     \ "Use ':ForgetMeNot save!' to overwrite the session.")
     return
   endif
-  call s:do_write(name, dir, v:true)
+  call forget_me_not#update_named_session(name, v:true)
 endfunction
 
 function! s:cmd_write(args) abort
@@ -171,16 +171,17 @@ function! s:cmd_write(args) abort
     \ "Use ':ForgetMeNot write!' to overwrite the session.")
     return
   endif
-  call s:do_write(name, dir, v:false)
+  call forget_me_not#update_named_session(name, v:false)
 endfunction
 
-function! s:do_write(name, dir, is_save) abort
+function! forget_me_not#update_named_session(name, is_save) abort
   if a:name =~# '^instance/'
     call s:U.echo_error('Cannot specify instance session name')
     return
   endif
-  call mkdir(a:dir, 'p')
-  let file = a:dir .. '/Session.vim'
+  let dir = s:U.named_dir() .. '/' .. a:name
+  call mkdir(dir, 'p')
+  let file = dir .. '/Session.vim'
   " Acquire lock to write to the session file.
   " Because if 'a:name' is current session, multiple writes may occur at same time.
   let [l:Release, err] = s:U.acquire_lock('name-' .. a:name)
