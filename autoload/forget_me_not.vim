@@ -150,6 +150,7 @@ function! s:cmd_save(args) abort
     return
   endif
   call forget_me_not#update_named_session(name, v:true)
+  call s:U.echo_info("Written '" .. name .. "' session.")
 endfunction
 
 function! s:cmd_write(args) abort
@@ -172,6 +173,7 @@ function! s:cmd_write(args) abort
     return
   endif
   call forget_me_not#update_named_session(name, v:false)
+  call s:U.echo_info("Written '" .. name .. "' session.")
 endfunction
 
 function! forget_me_not#update_named_session(name, is_save) abort
@@ -200,7 +202,6 @@ function! forget_me_not#update_named_session(name, is_save) abort
   if a:is_save
     call forget_me_not#instance#set_session_name(a:name)
   endif
-  call s:U.echo_info("Written '" .. a:name .. "' session.")
 endfunction
 
 function! s:cmd_delete(args) abort
