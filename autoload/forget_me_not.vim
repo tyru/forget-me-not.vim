@@ -118,7 +118,7 @@ function! s:do_read(session_name, stale, named, silent, recover, is_switch) abor
   if a:recover
     redraw
     let ans = input("Delete the session '" .. recovered_session.name .. "' ? " ..
-    \ "(IT IS DANGEROUS IF THE VIM INSTANCE IS ALIVE!!) [y/N]: ")
+    \ '(IT IS DANGEROUS IF THE VIM INSTANCE IS ALIVE!!) [y/N]: ')
     if ans =~? '^y'
       redraw
       execute 'ForgetMeNot delete -force' recovered_session.name
